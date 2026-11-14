@@ -3,14 +3,24 @@
 A native macOS project-planning app (Swift + SwiftUI) in the spirit of Microsoft Project:
 task table, Gantt chart, dependencies, milestones, summary tasks, critical path and resources.
 
-## Opening files in Windows
+## File formats
 
-The app's file format **is Microsoft Project's XML format (MSPDI)**. Save in Gantt, then in
-Project for Windows use **File ▸ Open** and pick the file (choose the "XML Format" filter if it's hidden).
-Files saved from Project as **XML Format** open in Gantt the same way.
+- **Native format: Microsoft Project XML (MSPDI).** Save in Gantt, then in Project for Windows use
+  **File ▸ Open** and pick the file (choose the "XML Format" filter if it's hidden). Files saved from
+  Project as **XML Format** open in Gantt too.
+- **Opening `.mpp`:** Gantt reads native `.mpp` files saved by **Project 2010 or newer** (including
+  2013, 2016, 2019 and 365). Tasks, outline, durations, manually-scheduled dates, links, resources,
+  assignments and the working calendar are imported; everything else (baselines, costs, custom
+  fields, views) is ignored. `.mpp` files are opened as a copy: use **File ▸ Save As** to save a
+  Project XML file, which Project for Windows opens. Gantt never writes `.mpp`.
+- Project 2007 or older `.mpp` files and password-protected files aren't supported; in Project use
+  **File ▸ Save As ▸ XML Format** first.
 
-The binary `.mpp` format is proprietary and is not supported. In Project for Windows use
-**File ▸ Save As ▸ XML Format** first.
+The `.mpp` reader follows the layout documented by the open-source MPXJ project. It was checked
+against MPXJ's own reader on 165 sample files (2,460 tasks): task names, outline levels,
+durations, dates, links, resources, assignments and working weeks all agreed (one deliberately
+corrupted sample excepted). Run your own file through it with
+`GANTT_MPP_SAMPLE=/path/file.mpp swift test --filter MPPTests`.
 
 ## Build & run (on a Mac, macOS 14+, Xcode 15+ / Swift 5.9+)
 
@@ -44,5 +54,5 @@ constraints, summary roll-up and critical-path (slack) calculation. Circular lin
 - No baselines, costs, resource leveling or work-hours per resource.
 - Links to/from summary tasks are kept in the file but ignored for scheduling.
 - Constraints other than "start no earlier than" (MSO, deadlines…) are not editable; "must start on" is imported as "no earlier than".
-- Windows round-trip is verified by unit tests against the MSPDI structure, but has not yet been
-  verified in Project itself — see below.
+- Saved XML follows the element order Project itself writes, but hasn't been opened in Project for
+  Windows yet.

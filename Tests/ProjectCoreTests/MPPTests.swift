@@ -44,7 +44,7 @@ final class MPPTests: XCTestCase {
         if path.contains("OGP_Gantt_Chart") {
             XCTAssertEqual(p.tasks.count, 69)
             XCTAssertEqual(p.workWeek, .everyDay)
-            XCTAssertEqual(p.tasks.filter { $0.durationDays == 0 }.count, 12 + p.tasks.indices.filter { p.isSummary(at: $0) }.count * 0)
+            XCTAssertEqual(p.tasks.indices.filter { !p.isSummary(at: $0) && p.tasks[$0].durationDays == 0 }.count, 12)
             XCTAssertEqual(p.resources.count, 15)
             XCTAssertEqual(p.tasks[0].outlineLevel, 1)
             XCTAssertEqual(p.startDate.iso, "2026-10-23")
