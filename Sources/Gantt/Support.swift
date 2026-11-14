@@ -30,7 +30,7 @@ enum Zoom: String, CaseIterable, Identifiable {
     }
 }
 
-enum Tab: String, CaseIterable, Identifiable {
+enum MainTab: String, CaseIterable, Identifiable {
     case tasks = "Tasks", resources = "Resources"
     var id: String { rawValue }
 }

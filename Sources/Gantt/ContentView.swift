@@ -7,7 +7,7 @@ struct ContentView: View {
     @Environment(\.undoManager) private var undoManager
     @State private var undoTarget = UndoTarget()
 
-    @State private var tab: Tab = .tasks
+    @State private var tab: MainTab = .tasks
     @State private var zoom: Zoom = .weeks
     @State private var selection = Set<Int>()
     @State private var lastClicked: Int?
@@ -66,7 +66,7 @@ struct ContentView: View {
             workingDaysMenu(project)
             Spacer()
             Picker("View", selection: $tab) {
-                ForEach(Tab.allCases) { Text($0.rawValue).tag($0) }
+                ForEach(MainTab.allCases) { Text($0.rawValue).tag($0) }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -163,7 +163,7 @@ struct ContentView: View {
 
     private func ganttPane(_ project: ProjectData, _ rows: [Row], _ geo: TimelineGeometry) -> some View {
         let positions = Dictionary(uniqueKeysWithValues: rows.enumerated().map { ($0.element.id, $0.offset) })
-        let selectedRows = Set(rows.enumerated().filter { selection.contains($0.element.id) }.map(\.offset))
+        let selectedRows = Set(rows.enumerated().filter { selection.contains($0.element.id) }.map { $0.offset })
         let today = Day.today()
         return ScrollViewReader { proxy in
             ScrollView(.horizontal) {
