@@ -31,6 +31,6 @@ struct ProjectDocument: FileDocument {
             throw CocoaError(.fileWriteUnsupportedScheme, userInfo: [
                 NSLocalizedDescriptionKey: "Gantt can't write .mpp files. Use File ▸ Save As… and save as Project XML, which opens in Microsoft Project."])
         }
-        FileWrapper(regularFileWithContents: MSPDI.write(project))
+        return FileWrapper(regularFileWithContents: MSPDI.write(project))
     }
 }
