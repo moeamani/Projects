@@ -18,12 +18,29 @@ final class DayTests: XCTestCase {
         let sat = Day(year: 2026, month: 11, day: 21)
         let mon = Day(year: 2026, month: 11, day: 23)
         XCTAssertEqual(sat.nextWorkingDay(), mon)
-        XCTAssertEqual(Day(workIndex: fri.workIndex + 1), mon)
-        XCTAssertEqual(Day(workIndex: mon.workIndex), mon)
-        XCTAssertEqual(sat.workIndex, mon.workIndex)
+        XCTAssertEqual(Day(workIndex: fri.workIndex() + 1), mon)
+        XCTAssertEqual(Day(workIndex: mon.workIndex()), mon)
+        XCTAssertEqual(sat.workIndex(), mon.workIndex())
         // Before 1970 too
         let old = Day(year: 1969, month: 12, day: 29)                    // Monday
-        XCTAssertEqual(Day(workIndex: old.workIndex), old)
+        XCTAssertEqual(Day(workIndex: old.workIndex()), old)
+    }
+
+    func testCustomWorkWeeks() {
+        // Saturday–Wednesday week (common in the Middle East): Thu/Fri off.
+        let week = WorkWeek(days: [6, 0, 1, 2, 3])
+        let wed = Day(year: 2026, month: 11, day: 18)
+        let thu = Day(year: 2026, month: 11, day: 19)
+        let sat = Day(year: 2026, month: 11, day: 21)
+        XCTAssertEqual(thu.nextWorkingDay(week), sat)
+        XCTAssertEqual(Day(workIndex: wed.workIndex(week) + 1, week), sat)
+        for offset in -20...20 {
+            let d = Day(year: 2026, month: 11, day: 18).adding(offset).nextWorkingDay(week)
+            XCTAssertEqual(Day(workIndex: d.workIndex(week), week), d)
+        }
+        // Seven-day week: every day is consecutive.
+        let all = WorkWeek.everyDay
+        XCTAssertEqual(Day(workIndex: wed.workIndex(all) + 3, all), wed.adding(3))
     }
 }
 
@@ -207,6 +224,57 @@ final class MSPDITests: XCTestCase {
         XCTAssertEqual(p.tasks[1].predecessors, [Link(predecessorUID: 1, type: .ss, lagDays: 1)])
         XCTAssertEqual(p.resources, [ProjectResource(uid: 1, name: "Pat")])
         XCTAssertEqual(p.tasks[1].resourceUIDs, [1])
+    }
+
+    /// Shaped like a real file saved by Project: 24-hour 7-day calendar, 1440-minute days,
+    /// manually scheduled tasks with fixed dates and no links, and non-Latin (Persian) names.
+    func testSevenDayManuallyScheduledProject() throws {
+        let xml = """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <Project xmlns="http://schemas.microsoft.com/project">
+          <Name>project.xml</Name><StartDate>2026-10-23T00:00:00</StartDate>
+          <CalendarUID>3</CalendarUID><MinutesPerDay>1440</MinutesPerDay>
+          <Calendars>
+            <Calendar><UID>1</UID><Name>Standard</Name><IsBaseCalendar>1</IsBaseCalendar><BaseCalendarUID>-1</BaseCalendarUID>
+              <WeekDays><WeekDay><DayType>1</DayType><DayWorking>0</DayWorking></WeekDay></WeekDays></Calendar>
+            <Calendar><UID>3</UID><Name>24 Hours</Name><IsBaseCalendar>1</IsBaseCalendar><BaseCalendarUID>-1</BaseCalendarUID>
+              <WeekDays>
+                <WeekDay><DayType>1</DayType><DayWorking>1</DayWorking></WeekDay>
+                <WeekDay><DayType>2</DayType><DayWorking>1</DayWorking></WeekDay>
+                <WeekDay><DayType>3</DayType><DayWorking>1</DayWorking></WeekDay>
+                <WeekDay><DayType>4</DayType><DayWorking>1</DayWorking></WeekDay>
+                <WeekDay><DayType>5</DayType><DayWorking>1</DayWorking></WeekDay>
+                <WeekDay><DayType>6</DayType><DayWorking>1</DayWorking></WeekDay>
+                <WeekDay><DayType>7</DayType><DayWorking>1</DayWorking></WeekDay>
+              </WeekDays></Calendar>
+          </Calendars>
+          <Tasks>
+            <Task><UID>1</UID><ID>1</ID><Name>ارزشیابی هوشمند</Name><Manual>1</Manual><OutlineLevel>1</OutlineLevel>
+              <Start>2026-10-23T00:00:00</Start><Duration>PT143H59M0S</Duration><Summary>1</Summary></Task>
+            <Task><UID>2</UID><ID>2</ID><Name>تحقیقات</Name><Manual>1</Manual><OutlineLevel>2</OutlineLevel>
+              <Start>2026-10-23T00:00:00</Start><Duration>PT95H59M0S</Duration><ConstraintType>0</ConstraintType></Task>
+            <Task><UID>3</UID><ID>3</ID><Name>طراحی</Name><Manual>1</Manual><OutlineLevel>2</OutlineLevel>
+              <Start>2026-10-27T00:00:00</Start><Duration>PT143H59M0S</Duration></Task>
+            <Task><UID>4</UID><ID>4</ID><Name>پایان</Name><Manual>1</Manual><OutlineLevel>2</OutlineLevel><Milestone>1</Milestone>
+              <Start>2026-11-02T23:59:00</Start><Duration>PT0H0M0S</Duration><ConstraintType>4</ConstraintType>
+              <ConstraintDate>2026-11-02T23:59:00</ConstraintDate></Task>
+          </Tasks>
+        </Project>
+        """
+        let p = try MSPDI.read(Data(xml.utf8))
+        XCTAssertEqual(p.workWeek, .everyDay)
+        XCTAssertEqual(p.tasks.map(\.durationDays), [1, 4, 6, 0])        // summary rows are recomputed, not read
+        let r = p.computeSchedule().byUID
+        XCTAssertEqual(r[2]!.start.iso, "2026-10-23"); XCTAssertEqual(r[2]!.finish.iso, "2026-10-26")   // 4 calendar days
+        XCTAssertEqual(r[3]!.start.iso, "2026-10-27"); XCTAssertEqual(r[3]!.finish.iso, "2026-11-01")   // 6 days, spans a weekend
+        XCTAssertEqual(r[4]!.start.iso, "2026-11-02")
+        XCTAssertEqual(r[1]!.start.iso, "2026-10-23"); XCTAssertEqual(r[1]!.finish.iso, "2026-11-01")
+        XCTAssertEqual(p.tasks[1].name, "تحقیقات")
+        // Saved back out, the 7-day calendar and the names survive.
+        let again = try MSPDI.read(MSPDI.write(p))
+        XCTAssertEqual(again.workWeek, .everyDay)
+        XCTAssertEqual(again.tasks.map(\.name), p.tasks.map(\.name))
+        XCTAssertEqual(again.computeSchedule().byUID, r)
     }
 
     func testRejectsNonProjectXML() {

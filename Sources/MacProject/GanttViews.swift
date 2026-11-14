@@ -87,6 +87,7 @@ struct GanttBackground: View {
     let geo: TimelineGeometry
     let rowCount: Int
     let selectedRows: Set<Int>
+    let workWeek: WorkWeek
     let deps: [DepLine]
     let today: Day
 
@@ -99,7 +100,7 @@ struct GanttBackground: View {
                          with: .color(Color.accentColor.opacity(0.12)))
             }
             // Weekends
-            for i in 0..<geo.totalDays where !geo.origin.adding(i).isWorkingDay {
+            for i in 0..<geo.totalDays where !workWeek.isWorking(geo.origin.adding(i)) {
                 ctx.fill(Path(CGRect(x: CGFloat(i) * geo.dayWidth, y: 0, width: geo.dayWidth, height: size.height)),
                          with: .color(Color.primary.opacity(0.045)))
             }

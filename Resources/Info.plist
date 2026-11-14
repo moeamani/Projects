@@ -5,6 +5,10 @@
     <key>CFBundleName</key><string>MacProject</string>
     <key>CFBundleDisplayName</key><string>MacProject</string>
     <key>CFBundleIdentifier</key><string>app.macproject.MacProject</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
+    <key>CFBundleDevelopmentRegion</key><string>en</string>
+    <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
+    <key>NSHumanReadableCopyright</key><string>Independent app. Not affiliated with or endorsed by Microsoft. Reads and writes the published Microsoft Project XML format.</string>
     <key>CFBundleExecutable</key><string>MacProject</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleVersion</key><string>1</string>
@@ -17,6 +21,7 @@
         <dict>
             <key>CFBundleTypeName</key><string>Microsoft Project XML</string>
             <key>CFBundleTypeRole</key><string>Editor</string>
+            <key>CFBundleTypeIconFile</key><string>AppIcon</string>
             <key>LSHandlerRank</key><string>Alternate</string>
             <key>LSItemContentTypes</key>
             <array><string>public.xml</string></array>

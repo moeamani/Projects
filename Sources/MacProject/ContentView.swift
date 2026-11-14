@@ -57,12 +57,13 @@ struct ContentView: View {
             .frame(maxWidth: 260)
             Text("Starts").foregroundStyle(.secondary)
             DatePicker("", selection: Binding(get: { project.startDate.date },
-                                              set: { d in edit("Change Project Start") { $0.startDate = Day(date: d).nextWorkingDay() } }),
+                                              set: { d in edit("Change Project Start") { $0.startDate = Day(date: d).nextWorkingDay($0.workWeek) } }),
                        displayedComponents: .date)
                 .labelsHidden()
                 .datePickerStyle(.field)
             Text("Finishes \(result.finish.date.formatted(date: .abbreviated, time: .omitted))")
                 .foregroundStyle(.secondary)
+            workingDaysMenu(project)
             Spacer()
             Picker("View", selection: $tab) {
                 ForEach(Tab.allCases) { Text($0.rawValue).tag($0) }
@@ -73,6 +74,26 @@ struct ContentView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+    }
+
+    private func workingDaysMenu(_ project: ProjectData) -> some View {
+        let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        return Menu {
+            ForEach(0..<7, id: \.self) { d in
+                Toggle(names[d], isOn: Binding(
+                    get: { project.workWeek.days.contains(d) },
+                    set: { on in
+                        var days = project.workWeek.days
+                        if on { days.append(d) } else { days.removeAll { $0 == d } }
+                        edit("Change Working Days") { $0.workWeek = WorkWeek(days: days) }
+                    }))
+            }
+        } label: {
+            Label("\(project.workWeek.days.count) working days/week", systemImage: "calendar.badge.clock")
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .help("Choose which weekdays count as working days")
     }
 
     // MARK: Tasks tab
@@ -147,7 +168,7 @@ struct ContentView: View {
         return ScrollViewReader { proxy in
             ScrollView(.horizontal) {
                 ZStack(alignment: .topLeading) {
-                    GanttBackground(geo: geo, rowCount: rows.count, selectedRows: selectedRows,
+                    GanttBackground(geo: geo, rowCount: rows.count, selectedRows: selectedRows, workWeek: project.workWeek,
                                     deps: dependencyLines(rows, positions, geo), today: today)
                     GanttBars(rows: rows, geo: geo,
                               onSelect: { select($0) },
@@ -332,14 +353,15 @@ struct ContentView: View {
     }
 
     private func setStart(_ uid: Int, _ day: Day) {
-        let target = day.nextWorkingDay()
+        let target = day.nextWorkingDay(document.project.workWeek)
         mutateTask(uid, "Change Start") { $0.startNoEarlierThan = target }
     }
 
     private func resize(_ uid: Int, toFinish finish: Day) {
         let project = document.project
         guard let s = project.computeSchedule().byUID[uid] else { return }
-        let days = max(1, finish.nextWorkingDay().workIndex - s.start.workIndex + 1)
+        let week = project.workWeek
+        let days = max(1, finish.nextWorkingDay(week).workIndex(week) - s.start.workIndex(week) + 1)
         mutateTask(uid, "Change Duration") { $0.durationDays = days }
     }
 

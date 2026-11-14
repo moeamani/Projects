@@ -43,7 +43,7 @@ public enum MSPDI {
         w.el("MinutesPerWeek", "\(minutesPerDay * 5)")
         w.el("DaysPerMonth", "20")
 
-        writeCalendar(&w)
+        writeCalendar(&w, workWeek: project.workWeek)
 
         w.open("Tasks")
         var counters: [Int] = []
@@ -124,7 +124,7 @@ public enum MSPDI {
         return Data(w.out.utf8)
     }
 
-    private static func writeCalendar(_ w: inout XMLWriter) {
+    private static func writeCalendar(_ w: inout XMLWriter, workWeek: WorkWeek) {
         w.open("Calendars")
         w.open("Calendar")
         w.el("UID", "1")
@@ -136,7 +136,7 @@ public enum MSPDI {
         for dayType in 1...7 {
             w.open("WeekDay")
             w.el("DayType", "\(dayType)")
-            let working = (2...6).contains(dayType)
+            let working = workWeek.days.contains(dayType - 1)
             w.el("DayWorking", working ? "1" : "0")
             if working {
                 w.open("WorkingTimes")
@@ -180,7 +180,8 @@ public enum MSPDI {
         if name.lowercased().hasSuffix(".xml") { name.removeLast(4) }
         let start = root.string("StartDate").flatMap { Day(iso: $0) } ?? Day.today()
 
-        var project = ProjectData(name: name, startDate: start.nextWorkingDay())
+        let week = workWeek(of: root)
+        var project = ProjectData(name: name, startDate: start.nextWorkingDay(week), workWeek: week)
 
         var usedUIDs = Set<Int>()
         var uidMap: [Int: Int] = [:]     // file UID → our UID
@@ -263,6 +264,27 @@ public enum MSPDI {
             project.tasks[i].resourceUIDs.append(ruid)
         }
         return project
+    }
+
+    /// The working weekdays of the project's base calendar (following `BaseCalendarUID` links).
+    static func workWeek(of root: XNode) -> WorkWeek {
+        let calendars = root.child("Calendars")?.children(named: "Calendar") ?? []
+        func calendar(_ uid: Int) -> XNode? { calendars.first { $0.int("UID") == uid } }
+        func working(_ cal: XNode, depth: Int) -> [Int: Bool] {
+            var result: [Int: Bool] = [:]
+            if depth < 5, let base = cal.int("BaseCalendarUID"), base >= 0, let b = calendar(base) {
+                result = working(b, depth: depth + 1)
+            }
+            for wd in cal.child("WeekDays")?.children(named: "WeekDay") ?? [] {
+                if let type = wd.int("DayType"), (1...7).contains(type), let flag = wd.int("DayWorking") {
+                    result[type - 1] = flag == 1
+                }
+            }
+            return result
+        }
+        guard let uid = root.int("CalendarUID"), let cal = calendar(uid) else { return .monFri }
+        let days = working(cal, depth: 0).filter { $0.value }.map(\.key)
+        return days.isEmpty ? .monFri : WorkWeek(days: days)
     }
 
     /// Parses ISO-8601 durations such as "PT40H0M0S" or "P2DT4H" into minutes.

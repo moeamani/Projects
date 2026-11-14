@@ -78,14 +78,17 @@ public struct PredecessorError: LocalizedError {
 public struct ProjectData: Equatable, Sendable {
     public var name: String
     public var startDate: Day
+    public var workWeek: WorkWeek
     public var tasks: [ProjectTask]
     public var resources: [ProjectResource]
 
     public init(name: String = "New Project",
                 startDate: Day = Day.today().nextWorkingDay(),
                 tasks: [ProjectTask] = [],
-                resources: [ProjectResource] = []) {
+                resources: [ProjectResource] = [],
+                workWeek: WorkWeek = .monFri) {
         self.name = name
+        self.workWeek = workWeek
         self.startDate = startDate
         self.tasks = tasks
         self.resources = resources

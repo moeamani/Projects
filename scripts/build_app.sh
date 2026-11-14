@@ -11,6 +11,7 @@ rm -rf "$APP" build/MacProject.zip
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/MacProject"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 codesign --force --deep --sign - "$APP"        # ad-hoc signature so it launches locally
 (cd build && ditto -c -k --keepParent MacProject.app MacProject.zip)
 echo "Built $APP"

@@ -35,8 +35,6 @@ public struct Day: Hashable, Comparable, Sendable {
     /// 0 = Sunday … 6 = Saturday.
     public var weekday: Int { (floorDiv(ordinal, 7) * -7 + ordinal + 4) % 7 }
 
-    public var isWorkingDay: Bool { let w = weekday; return w != 0 && w != 6 }
-
     public func adding(_ days: Int) -> Day { Day(ordinal: ordinal + days) }
 
     /// "yyyy-MM-dd"
@@ -68,32 +66,46 @@ public struct Day: Hashable, Comparable, Sendable {
         return Calendar.current.date(from: c) ?? Date(timeIntervalSince1970: 0)
     }
 
-    // MARK: Working-day arithmetic (Mon–Fri)
-
-    /// This day if it is a working day, otherwise the following Monday.
-    public func nextWorkingDay() -> Day {
-        switch weekday {
-        case 6: return adding(2)
-        case 0: return adding(1)
-        default: return self
-        }
-    }
-
-    /// Index of this day on a continuous Mon–Fri-only number line (weekends snap forward).
-    public var workIndex: Int {
-        let d = nextWorkingDay()
-        let wd = d.weekday               // 1...5
-        let monday = d.ordinal - (wd - 1)
-        return floorDiv(monday - 4, 7) * 5 + (wd - 1)
-    }
-
-    public init(workIndex idx: Int) {
-        let week = floorDiv(idx, 5)
-        self.init(ordinal: week * 7 + 4 + (idx - week * 5))
-    }
 }
 
 func floorDiv(_ a: Int, _ b: Int) -> Int {
     let q = a / b
     return (a % b != 0 && (a < 0) != (b < 0)) ? q - 1 : q
+}
+
+/// Which weekdays are working days (0 = Sunday … 6 = Saturday).
+public struct WorkWeek: Equatable, Sendable {
+    public let days: [Int]
+
+    public init(days: [Int]) {
+        let d = Array(Set(days.filter { (0...6).contains($0) })).sorted()
+        self.days = d.isEmpty ? [1, 2, 3, 4, 5] : d
+    }
+
+    public static let monFri = WorkWeek(days: [1, 2, 3, 4, 5])
+    public static let everyDay = WorkWeek(days: [0, 1, 2, 3, 4, 5, 6])
+
+    public func isWorking(_ day: Day) -> Bool { days.contains(day.weekday) }
+}
+
+extension Day {
+    /// This day if it is a working day, otherwise the next one that is.
+    public func nextWorkingDay(_ week: WorkWeek = .monFri) -> Day {
+        var d = self
+        while !week.isWorking(d) { d = d.adding(1) }
+        return d
+    }
+
+    /// Position on a continuous number line that counts only working days (non-working days snap forward).
+    public func workIndex(_ week: WorkWeek = .monFri) -> Int {
+        let d = nextWorkingDay(week)
+        let weekNumber = floorDiv(d.ordinal - d.weekday + 4, 7)       // weeks start on Sunday
+        return weekNumber * week.days.count + (week.days.firstIndex(of: d.weekday) ?? 0)
+    }
+
+    public init(workIndex idx: Int, _ week: WorkWeek = .monFri) {
+        let k = week.days.count
+        let weekNumber = floorDiv(idx, k)
+        self.init(ordinal: weekNumber * 7 - 4 + week.days[idx - weekNumber * k])
+    }
 }

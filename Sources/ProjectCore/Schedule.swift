@@ -25,6 +25,7 @@ extension ProjectData {
     /// Links to or from summary tasks are ignored (link their subtasks instead).
     public func computeSchedule() -> ScheduleResult {
         let n = tasks.count
+        let ww = workWeek
         let summary = (0..<n).map { isSummary(at: $0) }
         var uidToIndex: [Int: Int] = [:]
         for (i, t) in tasks.enumerated() { uidToIndex[t.uid] = i }
@@ -55,7 +56,7 @@ extension ProjectData {
         let ordered = Set(order)
         let leftovers = (0..<n).filter { !summary[$0] && !ordered.contains($0) }
 
-        let projectStart = startDate.workIndex
+        let projectStart = startDate.workIndex(ww)
         var s = [Int](repeating: projectStart, count: n)
         var e = [Int](repeating: projectStart, count: n)
         var done = [Bool](repeating: false, count: n)
@@ -63,7 +64,7 @@ extension ProjectData {
         for i in order + leftovers {
             let d = tasks[i].durationDays
             var start = projectStart
-            if let c = tasks[i].startNoEarlierThan { start = max(start, c.workIndex) }
+            if let c = tasks[i].startNoEarlierThan { start = max(start, c.workIndex(ww)) }
             for edge in preds[i] where done[edge.other] {
                 let p = edge.other
                 switch edge.type {
@@ -100,14 +101,14 @@ extension ProjectData {
             }
         }
 
-        func finishDay(_ start: Int, _ end: Int) -> Day { Day(workIndex: max(end - 1, start)) }
+        func finishDay(_ start: Int, _ end: Int) -> Day { Day(workIndex: max(end - 1, start), ww) }
 
         var result: [Int: TaskSchedule] = [:]
         for i in leaves {
             let inCycle = !ordered.contains(i)
             let slack = inCycle ? 0 : lf[i] - e[i]
             result[tasks[i].uid] = TaskSchedule(
-                start: Day(workIndex: s[i]),
+                start: Day(workIndex: s[i], ww),
                 finish: finishDay(s[i], e[i]),
                 durationDays: tasks[i].durationDays,
                 percentComplete: min(max(tasks[i].percentComplete, 0), 100),
@@ -133,7 +134,7 @@ extension ProjectData {
             }
             let kidResults = kids.compactMap { result[tasks[$0].uid] }
             result[tasks[i].uid] = TaskSchedule(
-                start: Day(workIndex: minS),
+                start: Day(workIndex: minS, ww),
                 finish: finishDay(minS, maxE),
                 durationDays: maxE - minS,
                 percentComplete: min(max(pct, 0), 100),
