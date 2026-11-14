@@ -1,13 +1,13 @@
-# MacProject
+# Gantt
 
 A native macOS project-planning app (Swift + SwiftUI) in the spirit of Microsoft Project:
 task table, Gantt chart, dependencies, milestones, summary tasks, critical path and resources.
 
 ## Opening files in Windows
 
-The app's file format **is Microsoft Project's XML format (MSPDI)**. Save in MacProject, then in
+The app's file format **is Microsoft Project's XML format (MSPDI)**. Save in Gantt, then in
 Project for Windows use **File ▸ Open** and pick the file (choose the "XML Format" filter if it's hidden).
-Files saved from Project as **XML Format** open in MacProject the same way.
+Files saved from Project as **XML Format** open in Gantt the same way.
 
 The binary `.mpp` format is proprietary and is not supported. In Project for Windows use
 **File ▸ Save As ▸ XML Format** first.
@@ -15,11 +15,11 @@ The binary `.mpp` format is proprietary and is not supported. In Project for Win
 ## Build & run (on a Mac, macOS 14+, Xcode 15+ / Swift 5.9+)
 
 ```bash
-./scripts/build_app.sh && open build/MacProject.app
+./scripts/build_app.sh && open build/Gantt.app
 ```
 
-or open `Package.swift` in Xcode and run the `MacProject` scheme. Unit tests: `swift test`.
-Every push also builds and tests on GitHub Actions and uploads `MacProject.app` as an artifact.
+or open `Package.swift` in Xcode and run the `Gantt` scheme. Unit tests: `swift test`.
+Every push also builds and tests on GitHub Actions and uploads `Gantt.app` as an artifact.
 
 ## Using it
 

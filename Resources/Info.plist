@@ -2,14 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleName</key><string>MacProject</string>
-    <key>CFBundleDisplayName</key><string>MacProject</string>
-    <key>CFBundleIdentifier</key><string>app.macproject.MacProject</string>
+    <key>CFBundleName</key><string>Gantt</string>
+    <key>CFBundleDisplayName</key><string>Gantt</string>
+    <key>CFBundleIdentifier</key><string>app.gantt.Gantt</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundleDevelopmentRegion</key><string>en</string>
     <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
     <key>NSHumanReadableCopyright</key><string>Independent app. Not affiliated with or endorsed by Microsoft. Reads and writes the published Microsoft Project XML format.</string>
-    <key>CFBundleExecutable</key><string>MacProject</string>
+    <key>CFBundleExecutable</key><string>Gantt</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleVersion</key><string>1</string>
     <key>CFBundleShortVersionString</key><string>1.0</string>

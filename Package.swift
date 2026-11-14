@@ -2,15 +2,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "MacProject",
+    name: "Gantt",
     platforms: [.macOS(.v14)],
     products: [
-        .executable(name: "MacProject", targets: ["MacProject"]),
+        .executable(name: "Gantt", targets: ["Gantt"]),
         .library(name: "ProjectCore", targets: ["ProjectCore"]),
     ],
     targets: [
         .target(name: "ProjectCore"),
-        .executableTarget(name: "MacProject", dependencies: ["ProjectCore"]),
+        .executableTarget(name: "Gantt", dependencies: ["ProjectCore"]),
         .testTarget(name: "ProjectCoreTests", dependencies: ["ProjectCore"]),
     ]
 )

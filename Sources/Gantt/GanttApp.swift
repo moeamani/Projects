@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct MacProjectApp: App {
+struct GanttApp: App {
     var body: some Scene {
         DocumentGroup(newDocument: ProjectDocument()) { file in
             ContentView(document: file.$document)
