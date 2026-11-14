@@ -26,6 +26,30 @@
             <key>LSItemContentTypes</key>
             <array><string>public.xml</string></array>
         </dict>
+        <dict>
+            <key>CFBundleTypeName</key><string>Microsoft Project</string>
+            <key>CFBundleTypeRole</key><string>Viewer</string>
+            <key>CFBundleTypeIconFile</key><string>AppIcon</string>
+            <key>LSHandlerRank</key><string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array><string>com.microsoft.project.mpp</string></array>
+        </dict>
+    </array>
+    <key>UTImportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key><string>com.microsoft.project.mpp</string>
+            <key>UTTypeDescription</key><string>Microsoft Project</string>
+            <key>UTTypeConformsTo</key>
+            <array><string>public.data</string></array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array><string>mpp</string></array>
+                <key>public.mime-type</key>
+                <array><string>application/vnd.ms-project</string></array>
+            </dict>
+        </dict>
     </array>
 </dict>
 </plist>
